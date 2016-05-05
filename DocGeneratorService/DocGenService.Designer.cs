@@ -1,6 +1,6 @@
 ﻿namespace DocGeneratorService
 	{
-	partial class Service1
+	partial class DocGenService
 		{
 		/// <summary> 
 		/// Required designer variable.
@@ -28,10 +28,25 @@
 		/// </summary>
 		private void InitializeComponent()
 			{
-			components = new System.ComponentModel.Container();
-			this.ServiceName = "Service1";
+			this.components = new System.ComponentModel.Container();
+			this.objEventLog = new System.Diagnostics.EventLog();
+			this.objTimer = new System.Windows.Forms.Timer(this.components);
+			((System.ComponentModel.ISupportInitialize)(this.objEventLog)).BeginInit();
+			// 
+			// objTimer
+			// 
+			this.objTimer.Tick += new System.EventHandler(this.objTimer_Tick);
+			// 
+			// DocGenService
+			// 
+			this.ServiceName = "DocGenService";
+			((System.ComponentModel.ISupportInitialize)(this.objEventLog)).EndInit();
+
 			}
 
 		#endregion
+
+		private System.Diagnostics.EventLog objEventLog;
+		private System.Windows.Forms.Timer objTimer;
 		}
 	}
