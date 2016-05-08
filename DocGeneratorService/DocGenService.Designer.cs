@@ -1,6 +1,6 @@
 ﻿namespace DocGeneratorService
 	{
-	partial class DocGenService
+	partial class DocGeneratorServiceBase
 		{
 		/// <summary> 
 		/// Required designer variable.
@@ -33,8 +33,13 @@
 			this.objTimer = new System.Windows.Forms.Timer(this.components);
 			((System.ComponentModel.ISupportInitialize)(this.objEventLog)).BeginInit();
 			// 
+			// objEventLog
+			// 
+			this.objEventLog.EnableRaisingEvents = true;
+			// 
 			// objTimer
 			// 
+			this.objTimer.Interval = 1000;
 			this.objTimer.Tick += new System.EventHandler(this.objTimer_Tick);
 			// 
 			// DocGenService

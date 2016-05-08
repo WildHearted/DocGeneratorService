@@ -1,6 +1,6 @@
 @echo
 
-c:\windows\microsoft.net\framework64\v4.0.30319\InstallUtil.exe /u E:\Downloads\DeveloperTools\DocGenerator\TestWindowService\bin\Debug\DocGenerator.exe
+c:\windows\microsoft.net\framework64\v4.0.30319\InstallUtil.exe /u E:\Development\Projects\DocGeneratorService\DocGeneratorService\bin\x64\Release\DocGeneratorService.exe
 
 @pause
 

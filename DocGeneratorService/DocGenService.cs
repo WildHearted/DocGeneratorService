@@ -12,7 +12,7 @@ using DocGeneratorCore;
 
 namespace DocGeneratorService
 	{
-	public partial class DocGenService:ServiceBase
+	public partial class DocGeneratorServiceBase : System.ServiceProcess. ServiceBase
 		{
 		public enum ServiceState
 			{
@@ -39,13 +39,14 @@ namespace DocGeneratorService
 		[DllImport("advapi32.dll", SetLastError = true)]
 		private static extern bool SetServiceStatus(IntPtr handle, ref ServiceStatus serviceStatus);
 	
-		public DocGenService()
+		public DocGeneratorServiceBase()
 			{
 			InitializeComponent();
-			objEventLog = new System.Diagnostics.EventLog();
-			if(!System.Diagnostics.EventLog.SourceExists("DocGeneratorEventSource"))
+
+			objEventLog = new EventLog();
+			if(!EventLog.SourceExists("DocGeneratorEventSource"))
 				{
-				System.Diagnostics.EventLog.CreateEventSource(source: "DocGeneratorEventSource", logName: "DocGeneratorLog");
+				EventLog.CreateEventSource(source: "DocGeneratorEventSource", logName: "DocGeneratorLog");
 				}
 			objEventLog.Source = "DocGeneratorEventSource";
 			objEventLog.Log = "DocGeneratorLog";
@@ -58,7 +59,7 @@ namespace DocGeneratorService
 			// Update the service state to Start Pending. 
 			ServiceStatus objServiceStatus = new ServiceStatus();
 			objServiceStatus.dwCurrentState = ServiceState.SERVICE_START_PENDING;
-			objServiceStatus.dwWaitHint = 100000; // 10 seconds
+			objServiceStatus.dwWaitHint =30000; // 30 seconds
 			SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
 
 			System.Timers.Timer objTimer = new System.Timers.Timer();
@@ -82,7 +83,7 @@ namespace DocGeneratorService
 			// Update the service state to Stop Pending. 
 			ServiceStatus objServiceStatus = new ServiceStatus();
 			objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOP_PENDING;
-			objServiceStatus.dwWaitHint = 3000000; // 300 seconds - 5 minutes
+			objServiceStatus.dwWaitHint = 300000; // 300 seconds - 5 minutes
 			SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
 
 			objTimer.Enabled = false;
@@ -101,7 +102,7 @@ namespace DocGeneratorService
 			// Update the service state to Pause Pending. 
 			ServiceStatus objServiceStatus = new ServiceStatus();
 			objServiceStatus.dwCurrentState = ServiceState.SERVICE_PAUSE_PENDING;
-			objServiceStatus.dwWaitHint = 3000000; // 300 seconds - 5 minutes
+			objServiceStatus.dwWaitHint = 300000; // 300 seconds - 5 minutes
 			SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
 
 			objTimer.Enabled = false;
@@ -120,7 +121,7 @@ namespace DocGeneratorService
 			// Update the service state to Start Pending. 
 			ServiceStatus objServiceStatus = new ServiceStatus();
 			objServiceStatus.dwCurrentState = ServiceState.SERVICE_CONTINUE_PENDING;
-			objServiceStatus.dwWaitHint = 100000; // 10 seconds
+			objServiceStatus.dwWaitHint = 30000; // 30 seconds
 			SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
 
 			objTimer.Enabled = true;
@@ -156,7 +157,7 @@ namespace DocGeneratorService
 			objEventLog.WriteEntry(DateTime.Now.ToString("G") + " +++ Started DocGenerator Service +++");
 
 			// Invoke the DocGeneratorCore's MainController object MainProcess method
-			DocGeneratorCore.MainController objMainController = new MainController();
+			MainController objMainController = new MainController();
 			objMainController.MainProcess();
 
 			objEventLog.WriteEntry("     + Event Ended... @ " + DateTime.Now);
