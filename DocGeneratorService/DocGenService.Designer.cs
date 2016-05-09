@@ -36,13 +36,14 @@
 			// objEventLog
 			// 
 			this.objEventLog.EnableRaisingEvents = true;
+			this.objEventLog.Log = "DocGenEventLog";
 			// 
 			// objTimer
 			// 
 			this.objTimer.Interval = 1000;
 			this.objTimer.Tick += new System.EventHandler(this.objTimer_Tick);
 			// 
-			// DocGenService
+			// DocGeneratorServiceBase
 			// 
 			this.ServiceName = "DocGenService";
 			((System.ComponentModel.ISupportInitialize)(this.objEventLog)).EndInit();
