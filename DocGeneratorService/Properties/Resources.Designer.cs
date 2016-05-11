@@ -88,6 +88,15 @@ namespace DocGeneratorService.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ben.vandenberg@za.didata.com.
+        /// </summary>
+        internal static string EmailAddress_TechnicalSupport {
+            get {
+                return ResourceManager.GetString("EmailAddress_TechnicalSupport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to /_vti_bin/listdata.svc.
         /// </summary>
         internal static string SharePointRESTuri {

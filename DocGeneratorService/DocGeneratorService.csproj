@@ -75,7 +75,8 @@
     <ApplicationIcon>DocGenerator64.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DocGeneratorCore">
+    <Reference Include="DocGeneratorCore, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\DocGeneratorCore\DogGenUI\bin\x64\Debug\DocGeneratorCore.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Data.Edm, Version=5.6.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -136,6 +137,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Reference.datasvcmap</DependentUpon>
     </Compile>
+    <Compile Include="ThreadControl.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

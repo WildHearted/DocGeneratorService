@@ -2,16 +2,17 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Services.Client;
 using System.Diagnostics;
 using System.Linq;
 using System.ServiceProcess;
-using System.Data.Services.Client;
 using System.Runtime.InteropServices;
 using System.Net;
-using System.Threading.Tasks;
+using System.Threading;
 using Microsoft.SharePoint.Client;
-using DocGeneratorService.SDDPServiceReference;
 using DocGeneratorCore;
+using DocGeneratorService.SDDPServiceReference;
+
 
 namespace DocGeneratorService
 	{
@@ -39,13 +40,22 @@ namespace DocGeneratorService
 			public long dwWaitHint;
 			};
 
-		public bool bBusyGenerating = false;
-		public string strDocCollectionsToGenetate = String.Empty;
-		public string strExceptionMessage = String.Empty;
+		private Object objThreadLock = new Object();
+		private DesignAndDeliveryPortfolioDataContext SDDPdatacontext = new DesignAndDeliveryPortfolioDataContext(
+			new Uri(Properties.Resources.SharePointSiteURL + Properties.Resources.SharePointRESTuri));
+		private DateTime dtDataRefreshed = new DateTime(2000,1,1,0,0,0);
+		private static bool bCompleteDataSetReady = false;
+		private CompleteDataSet objCompleteDataSet = new CompleteDataSet();
+		//private static Barrier barrierDataSetRefesh = new Barrier(
+		//	participantCount: 5, 
+		//	postPhaseAction: (bar) =>
+		//	{
+		//		if()
+		//	});
 
 		//[DllImport("advapi32.dll", SetLastError = true)]
 		//private static extern bool SetServiceStatus(IntPtr handle, ref ServiceStatus serviceStatus);
-	
+
 		public DocGeneratorServiceBase()
 			{
 			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " DocGeneratorServiceBase begin...");
@@ -78,15 +88,23 @@ namespace DocGeneratorService
 				//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
 
 				//Define and set the timer's tick interval
-				System.Timers.Timer objTimer = new System.Timers.Timer();
-				objTimer.Interval = 60000; // timer fire every 60 seconds.
-
-				// Inistiate the Timer's Event Ticker
-				objTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.objTimer_Tick);
-
+				//System.Timers.Timer objTimer = new System.Timers.Timer();
+				//objTimer.Interval = 60000; // timer fire every 60 seconds.
+				// Initiate the Timer's Event Ticker
+				//objTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.DocumentGenerateTimer_Tick);
 				// Switch the envent on
-				objTimer.Enabled = true;
-				objTimer.Start();
+				//objTimer.Enabled = true;
+				//objTimer.Start();
+
+				// Configure the timer for the refreshing the DataSet
+				this.DataRefreshTimer.Interval = 10000; // Timer to fire every 10 seconds
+				this.DataRefreshTimer.Enabled = true;
+				this.DataRefreshTimer.Start();
+
+				// Configure the timer for the Generation of Documents
+				this.DocumentGenerateTimer.Interval = 60000; // Timer to fire every 60 seconds
+				this.DocumentGenerateTimer.Enabled = true;
+				this.DocumentGenerateTimer.Start();
 
 				// Update the service state to Running. 
 				//objServiceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
@@ -109,15 +127,18 @@ namespace DocGeneratorService
 			{
 			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnStop event Begin...");
 			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " --- Starting DocGenerator Service ---");
-			
+
 			// Update the service state to Stop Pending. 
 			//ServiceStatus objServiceStatus = new ServiceStatus();
 			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOP_PENDING;
 			//objServiceStatus.dwWaitHint = 300000; // 300 seconds - 5 minutes
 			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
 
-			objTimer.Enabled = false;
-			objTimer.Stop();
+			DocumentGenerateTimer.Enabled = false;
+			DocumentGenerateTimer.Stop();
+
+			DataRefreshTimer.Enabled = false;
+			DataRefreshTimer.Stop();
 
 			// Update the service state to Stopped. 
 			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;
@@ -138,8 +159,11 @@ namespace DocGeneratorService
 			//objServiceStatus.dwWaitHint = 300000; // 300 seconds - 5 minutes
 			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
 
-			objTimer.Enabled = false;
-			objTimer.Stop();
+			DocumentGenerateTimer.Enabled = false;
+			DocumentGenerateTimer.Stop();
+
+			DataRefreshTimer.Enabled = false;
+			DataRefreshTimer.Stop();
 
 			// Update the service state to Stopped. 
 			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_PAUSED;
@@ -160,9 +184,11 @@ namespace DocGeneratorService
 			//objServiceStatus.dwWaitHint = 30000; // 30 seconds
 			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
 
-			objTimer.Enabled = true;
-			objTimer.Start();
+			DocumentGenerateTimer.Enabled = true;
+			DocumentGenerateTimer.Start();
 
+			DataRefreshTimer.Enabled = false;
+			DataRefreshTimer.Stop();
 			// Update the service state to Running. 
 			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
 			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
@@ -182,9 +208,11 @@ namespace DocGeneratorService
 			//objServiceStatus.dwWaitHint = 3000000; // 300 seconds - 5 minutes
 			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
 
-			objTimer.Enabled = false;
-			objTimer.Stop();
+			DocumentGenerateTimer.Enabled = false;
+			DocumentGenerateTimer.Stop();
 
+			DataRefreshTimer.Enabled = false;
+			DataRefreshTimer.Stop();
 			// Update the service state to Stopped. 
 			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;
 			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
@@ -193,101 +221,141 @@ namespace DocGeneratorService
 			}
 
 
-		private void objTimer_Tick(object sender, EventArgs e)
+		private void DataRefreshTimer_Tick(object sender, EventArgs e)
 			{
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnTimer (tick) event begin...");
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " +++ DocGenerator Service event fired +++");
+			//this.SDDPdatacontext.Credentials = new NetworkCredential(
+			//			userName: Properties.Resources.DocGenerator_AccountName,
+			//			password: Properties.Resources.DocGenerator_Account_Password,
+			//			domain: Properties.Resources.DocGenerator_AccountDomain);
+			//SDDPdatacontext.MergeOption = MergeOption.NoTracking;
 
-			if(!bBusyGenerating)
+			//Thread objThread1 = new Thread(() => objCompleteDataSet.PopulateBaseObjects());
+
+
+			}
+
+		private void DocumentGenerateTimer_Tick(object sender, EventArgs e)
+			{
+			// Protect this code that only a single thread at a time can generate documents.
+			lock (objThreadLock)
 				{
+				String EmailBodyText = String.Empty;
+				string strExceptionMessage = String.Empty;
+				bool bSuccessfulSentEmail = false;
+				List<DocumentCollection> listDocumentCollections = new List<DocumentCollection>();
+	
 				try
 					{
-					bBusyGenerating = true;
-					strDocCollectionsToGenetate = String.Empty;
-					string strExceptionMessage = string.Empty;
-
 					//Construct the SharePoint Client Context
-					DesignAndDeliveryPortfolioDataContext objSDDPdatacontext = new DesignAndDeliveryPortfolioDataContext(new Uri(Properties.Resources.SharePointSiteURL + Properties.Resources.SharePointRESTuri));
+					//DesignAndDeliveryPortfolioDataContext objSDDPdatacontext = new DesignAndDeliveryPortfolioDataContext(
+					//	new Uri(Properties.Resources.SharePointSiteURL + Properties.Resources.SharePointRESTuri));
 
-					objSDDPdatacontext.Credentials = new NetworkCredential(
+					SDDPdatacontext.Credentials = new NetworkCredential(
 						userName: Properties.Resources.DocGenerator_AccountName,
 						password: Properties.Resources.DocGenerator_Account_Password,
 						domain: Properties.Resources.DocGenerator_AccountDomain);
 
-					objSDDPdatacontext.MergeOption = MergeOption.NoTracking;
+					SDDPdatacontext.MergeOption = MergeOption.NoTracking;
 
-					var dsDocCollections = from dsDocumentCollection in objSDDPdatacontext.DocumentCollectionLibrary
-									where dsDocumentCollection.GenerateActionValue != null
-									&& dsDocumentCollection.GenerateActionValue != "Save but don't generate the documents yet"
-									&& dsDocumentCollection.GenerationStatus != enumGenerationStatus.Completed.ToString()
-									&& dsDocumentCollection.GenerationStatus != enumGenerationStatus.Failed.ToString()
-									&& dsDocumentCollection.GenerationStatus != enumGenerationStatus.Generating.ToString()
-									orderby dsDocumentCollection.Modified select dsDocumentCollection;
+					var dsDocCollections = from dsDocumentCollection in SDDPdatacontext.DocumentCollectionLibrary
+									   where dsDocumentCollection.GenerateActionValue != null
+										&& dsDocumentCollection.GenerateActionValue != "Save but don't generate the documents yet"
+										&& (dsDocumentCollection.GenerationStatus == enumGenerationStatus.Pending.ToString()
+											|| dsDocumentCollection.GenerationStatus == null)
+										orderby dsDocumentCollection.Modified
+										select dsDocumentCollection;
 
-					foreach(var objDocCollectionToGenerate in dsDocCollections)
+					foreach(var recDocCollectionToGenerate in dsDocCollections)
 						{
-						strDocCollectionsToGenetate += objDocCollectionToGenerate.Id + ",";
+						// Create a DocumentCollection instance and populate the basic attributes.
+						DocumentCollection objDocumentCollection = new DocumentCollection();
+						objDocumentCollection.ID = recDocCollectionToGenerate.Id;
+						if(recDocCollectionToGenerate.Title == null)
+							objDocumentCollection.Title = "Collection Title for entry " + recDocCollectionToGenerate.Id;
+						else
+							objDocumentCollection.Title = recDocCollectionToGenerate.Title;
+						objDocumentCollection.DetailComplete = false;
+						// Add the DocumentCollection object to the listDocumentCollection
+						listDocumentCollections.Add(objDocumentCollection);
 						}
 
-					if(strDocCollectionsToGenetate != String.Empty)
+					// Check if there are any Document Collections to generate
+					if(listDocumentCollections.Count > 0)
 						{
-						// Invoke the DocGeneratorCore's MainController object MainProcess method
-						MainController objMainController = new MainController();
-
-						objMainController.MainProcess();
-						bBusyGenerating = false;
+						foreach(DocumentCollection entryDocumentCollection in listDocumentCollections)
+							{// Invoke the DocGeneratorCore's MainController object MainProcess method
+							MainController objMainController = new MainController();
+							objMainController.DocumentCollectionsToGenerate = listDocumentCollections;
+							objMainController.MainProcess();
+							}
 						}
 					}
 				catch(DataServiceClientException exc)
 					{
-					Console.Beep(2500, 750);
-					strExceptionMessage = "*** Exception ERROR ***: Cannot access site: " + Properties.Resources.SharePointSiteURL
+					strExceptionMessage = "*** Exception ERROR ***: DocGeneratorServer cannot access site: " + Properties.Resources.SharePointSiteURL
 						+ " Please check that the computer/server is connected to the Domain network "
 						+ " \n \nMessage:" + exc.Message + "\n HResult: " + exc.HResult + "\nStatusCode: " + exc.StatusCode
 						+ " \nInnerException: " + exc.InnerException + "\nStackTrace: " + exc.StackTrace;
-					Console.WriteLine(strExceptionMessage);
-					throw new GeneralException(strExceptionMessage);
+					EmailBodyText += "\n\t - Unable to generatate any documents. \n" + strExceptionMessage;
+					bSuccessfulSentEmail = eMail.SendEmail(
+						parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
+						parSubject: "Error occurred in DocGenerator Server module.)",
+						parBody: EmailBodyText,
+						parSendBcc: false);
 					}
 				catch(DataServiceQueryException exc)
 					{
-					Console.Beep(2500, 750);
 					strExceptionMessage = "*** Exception ERROR ***: Cannot access site: " + Properties.Resources.SharePointSiteURL
 						+ " Please check that the computer/server is connected to the Domain network "
 						+ " \n \nMessage:" + exc.Message + "\n HResult: " + exc.HResult
 						+ " \nInnerException: " + exc.InnerException + "\nStackTrace: " + exc.StackTrace;
-					Console.WriteLine(strExceptionMessage);
-					throw new GeneralException(strExceptionMessage);
+					EmailBodyText += "\n\t - Unable to generatate any documents. \n" + strExceptionMessage;
+					bSuccessfulSentEmail = eMail.SendEmail(
+						parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
+						parSubject: "Error occurred in DocGenerator Server module.)",
+						parBody: EmailBodyText,
+						parSendBcc: false);
 					}
 				catch(DataServiceRequestException exc)
 					{
-					Console.Beep(2500, 750);
 					strExceptionMessage = "*** Exception ERROR ***: Cannot access site: " + Properties.Resources.SharePointSiteURL
 						+ " Please check that the computer/server is connected to the Domain network "
 						+ " \n \nMessage:" + exc.Message + "\n HResult: " + exc.HResult
 						+ " \nInnerException: " + exc.InnerException + "\nStackTrace: " + exc.StackTrace;
-					Console.WriteLine(strExceptionMessage);
-					throw new GeneralException(strExceptionMessage);
+					EmailBodyText += "\n\t - Unable to generatate any documents. \n" + strExceptionMessage;
+					bSuccessfulSentEmail = eMail.SendEmail(
+						parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
+						parSubject: "Error occurred in DocGenerator Server module.)",
+						parBody: EmailBodyText,
+						parSendBcc: false);
 					}
 				catch(DataServiceTransportException exc)
 					{
-					Console.Beep(2500, 750);
 					strExceptionMessage = "*** Exception ERROR ***: Cannot access site: " + Properties.Resources.SharePointSiteURL
 						+ " Please check that the computer/server is connected to the Domain network "
 						+ " \n \nMessage:" + exc.Message + "\n HResult: " + exc.HResult
 						+ " \nInnerException: " + exc.InnerException + "\nStackTrace: " + exc.StackTrace;
-					Console.WriteLine(strExceptionMessage);
-					throw new GeneralException(strExceptionMessage);
+					EmailBodyText += "\n\t - Unable to generatate any documents. \n" + strExceptionMessage;
+					bSuccessfulSentEmail = eMail.SendEmail(
+						parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
+						parSubject: "Error occurred in DocGenerator Server module.)",
+						parBody: EmailBodyText,
+						parSendBcc: false);
 					}
 				catch(Exception exc)
 					{
-					Console.Beep(2500, 750);
-
 					if(exc.HResult == -2146330330)
 						{
 						strExceptionMessage = "*** Exception ERROR ***: Cannot access site: " + Properties.Resources.SharePointSiteURL
 						+ " Please check that the computer/server is connected to the Domain network "
 						+ " \n \nMessage:" + exc.Message + "\n HResult: " + exc.HResult
 						+ " \nInnerException: " + exc.InnerException + "\nStackTrace: " + exc.StackTrace;
+						EmailBodyText += "\n\t - Unable to generatate any documents. \n" + strExceptionMessage;
+						bSuccessfulSentEmail = eMail.SendEmail(
+							parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
+							parSubject: "Error occurred in DocGenerator Server module.)",
+							parBody: EmailBodyText,
+							parSendBcc: false);
 						}
 					else if(exc.HResult == -2146233033)
 						{
@@ -295,6 +363,12 @@ namespace DocGeneratorService
 						+ " Please check that the computer/server is connected to the Domain network "
 						+ " \n \nMessage:" + exc.Message + "\n HResult: " + exc.HResult
 						+ " \nInnerException: " + exc.InnerException + "\nStackTrace: " + exc.StackTrace;
+						EmailBodyText += "\n\t - Unable to generatate any documents. \n" + strExceptionMessage;
+						bSuccessfulSentEmail = eMail.SendEmail(
+							parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
+							parSubject: "Error occurred in DocGenerator Server module.)",
+							parBody: EmailBodyText,
+							parSendBcc: false);
 						}
 					else
 						{
@@ -302,14 +376,15 @@ namespace DocGeneratorService
 						+ " Please check that the computer/server is connected to the Domain network "
 						+ " \n \nMessage:" + exc.Message + "\n HResult: " + exc.HResult
 						+ " \nInnerException: " + exc.InnerException + "\nStackTrace: " + exc.StackTrace;
-						};
-					}
-				}
-
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " +++ Event Ended...");
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnTimer (tick) event Ended...");
+						EmailBodyText += "\n\t - Unable to generatate any documents. \n" + strExceptionMessage;
+						bSuccessfulSentEmail = eMail.SendEmail(
+							parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
+							parSubject: "Error occurred in DocGenerator Server module.)",
+							parBody: EmailBodyText,
+							parSendBcc: false);
+						}
+					} //Catch
+				} // End Lock...
 			}
-
-
 		}
 	}

@@ -126,6 +126,9 @@
   <data name="DocGenerator_Account_Password" xml:space="preserve">
     <value>1#life#LIVE#it</value>
   </data>
+  <data name="EmailAddress_TechnicalSupport" xml:space="preserve">
+    <value>ben.vandenberg@za.didata.com</value>
+  </data>
   <data name="SharePointRESTuri" xml:space="preserve">
     <value>/_vti_bin/listdata.svc</value>
   </data>
