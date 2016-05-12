@@ -91,20 +91,23 @@ namespace DocGeneratorService
 				//System.Timers.Timer objTimer = new System.Timers.Timer();
 				//objTimer.Interval = 60000; // timer fire every 60 seconds.
 				// Initiate the Timer's Event Ticker
-				//objTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.DocumentGenerateTimer_Tick);
+				//objTimer.Elapsed += new System.Timers.ElapsedEventHandler(objTimer_Tick);
 				// Switch the envent on
 				//objTimer.Enabled = true;
 				//objTimer.Start();
 
 				// Configure the timer for the refreshing the DataSet
+				
 				this.DataRefreshTimer.Interval = 10000; // Timer to fire every 10 seconds
 				this.DataRefreshTimer.Enabled = true;
 				this.DataRefreshTimer.Start();
 
 				// Configure the timer for the Generation of Documents
-				this.DocumentGenerateTimer.Interval = 60000; // Timer to fire every 60 seconds
-				this.DocumentGenerateTimer.Enabled = true;
-				this.DocumentGenerateTimer.Start();
+				System.Timers.Timer DocumentGenerateTimer = new System.Timers.Timer();
+				DocumentGenerateTimer.Interval = 60000; // Timer to fire every 60 seconds
+				DocumentGenerateTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.DocumentGenerateTimer_Tick);
+				DocumentGenerateTimer.Enabled = true;
+				DocumentGenerateTimer.Start();
 
 				// Update the service state to Running. 
 				//objServiceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
@@ -123,120 +126,10 @@ namespace DocGeneratorService
 			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnStart event Ended...");
 			}
 
-		protected override void OnStop()
-			{
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnStop event Begin...");
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " --- Starting DocGenerator Service ---");
-
-			// Update the service state to Stop Pending. 
-			//ServiceStatus objServiceStatus = new ServiceStatus();
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOP_PENDING;
-			//objServiceStatus.dwWaitHint = 300000; // 300 seconds - 5 minutes
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			DocumentGenerateTimer.Enabled = false;
-			DocumentGenerateTimer.Stop();
-
-			DataRefreshTimer.Enabled = false;
-			DataRefreshTimer.Stop();
-
-			// Update the service state to Stopped. 
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " --- DocGenerator Service Started ---");
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnStop event Ended...");
-			}
-
-		protected override void OnPause()
-			{
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnPause event begin...");
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === Pausing DocGenerator Service ===");
-
-			// Update the service state to Pause Pending. 
-			//ServiceStatus objServiceStatus = new ServiceStatus();
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_PAUSE_PENDING;
-			//objServiceStatus.dwWaitHint = 300000; // 300 seconds - 5 minutes
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			DocumentGenerateTimer.Enabled = false;
-			DocumentGenerateTimer.Stop();
-
-			DataRefreshTimer.Enabled = false;
-			DataRefreshTimer.Stop();
-
-			// Update the service state to Stopped. 
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_PAUSED;
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === DocGenerator Service Paused ===");
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnPause event Ended...");
-			}
-
-		protected override void OnContinue()
-			{
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnContinue event Begin...");
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === Continuing DocGenerator Service ===");
-
-			// Update the service state to Start Pending. 
-			//ServiceStatus objServiceStatus = new ServiceStatus();
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_CONTINUE_PENDING;
-			//objServiceStatus.dwWaitHint = 30000; // 30 seconds
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			DocumentGenerateTimer.Enabled = true;
-			DocumentGenerateTimer.Start();
-
-			DataRefreshTimer.Enabled = false;
-			DataRefreshTimer.Stop();
-			// Update the service state to Running. 
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === DocGenerator Service Continued ===");
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnConinue event Ended...");
-			}
-
-		protected override void OnShutdown()
-			{
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnShutdown event begin...");
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === Shutting Down DocGenerator Service ===");
-
-			// Update the service state to Shatdown Pending. 
-			//ServiceStatus objServiceStatus = new ServiceStatus();
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOP_PENDING;
-			//objServiceStatus.dwWaitHint = 3000000; // 300 seconds - 5 minutes
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			DocumentGenerateTimer.Enabled = false;
-			DocumentGenerateTimer.Stop();
-
-			DataRefreshTimer.Enabled = false;
-			DataRefreshTimer.Stop();
-			// Update the service state to Stopped. 
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === DocGenerator Service Stopped/Shutdown ===");
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnShutdown event Ended...");
-			}
-
-
-		private void DataRefreshTimer_Tick(object sender, EventArgs e)
-			{
-			//this.SDDPdatacontext.Credentials = new NetworkCredential(
-			//			userName: Properties.Resources.DocGenerator_AccountName,
-			//			password: Properties.Resources.DocGenerator_Account_Password,
-			//			domain: Properties.Resources.DocGenerator_AccountDomain);
-			//SDDPdatacontext.MergeOption = MergeOption.NoTracking;
-
-			//Thread objThread1 = new Thread(() => objCompleteDataSet.PopulateBaseObjects());
-
-
-			}
-
 		private void DocumentGenerateTimer_Tick(object sender, EventArgs e)
 			{
 			// Protect this code that only a single thread at a time can generate documents.
+			Console.WriteLine("Ready to execute a generation cycle..");
 			lock (objThreadLock)
 				{
 				String EmailBodyText = String.Empty;
@@ -385,6 +278,117 @@ namespace DocGeneratorService
 						}
 					} //Catch
 				} // End Lock...
+			}
+
+		private void DataRefreshTimer_Tick(object sender, EventArgs e)
+			{
+			Console.WriteLine("The Data Refresher Event Fired...");
+			//this.SDDPdatacontext.Credentials = new NetworkCredential(
+			//			userName: Properties.Resources.DocGenerator_AccountName,
+			//			password: Properties.Resources.DocGenerator_Account_Password,
+			//			domain: Properties.Resources.DocGenerator_AccountDomain);
+			//SDDPdatacontext.MergeOption = MergeOption.NoTracking;
+
+			//Thread objThread1 = new Thread(() => objCompleteDataSet.PopulateBaseObjects());
+			
+
+			}
+
+		protected override void OnStop()
+			{
+			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnStop event Begin...");
+			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " --- Starting DocGenerator Service ---");
+
+			// Update the service state to Stop Pending. 
+			//ServiceStatus objServiceStatus = new ServiceStatus();
+			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOP_PENDING;
+			//objServiceStatus.dwWaitHint = 300000; // 300 seconds - 5 minutes
+			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
+
+			DocumentGenerateTimer.Enabled = false;
+			DocumentGenerateTimer.Stop();
+
+			DataRefreshTimer.Enabled = false;
+			DataRefreshTimer.Stop();
+
+			// Update the service state to Stopped. 
+			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;
+			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
+
+			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " --- DocGenerator Service Started ---");
+			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnStop event Ended...");
+			}
+
+		protected override void OnPause()
+			{
+			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnPause event begin...");
+			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === Pausing DocGenerator Service ===");
+
+			// Update the service state to Pause Pending. 
+			//ServiceStatus objServiceStatus = new ServiceStatus();
+			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_PAUSE_PENDING;
+			//objServiceStatus.dwWaitHint = 300000; // 300 seconds - 5 minutes
+			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
+
+			DocumentGenerateTimer.Enabled = false;
+			DocumentGenerateTimer.Stop();
+
+			DataRefreshTimer.Enabled = false;
+			DataRefreshTimer.Stop();
+
+			// Update the service state to Stopped. 
+			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_PAUSED;
+			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
+
+			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === DocGenerator Service Paused ===");
+			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnPause event Ended...");
+			}
+
+		protected override void OnContinue()
+			{
+			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnContinue event Begin...");
+			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === Continuing DocGenerator Service ===");
+
+			// Update the service state to Start Pending. 
+			//ServiceStatus objServiceStatus = new ServiceStatus();
+			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_CONTINUE_PENDING;
+			//objServiceStatus.dwWaitHint = 30000; // 30 seconds
+			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
+
+			DocumentGenerateTimer.Enabled = true;
+			DocumentGenerateTimer.Start();
+
+			DataRefreshTimer.Enabled = false;
+			DataRefreshTimer.Stop();
+			// Update the service state to Running. 
+			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
+			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
+
+			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === DocGenerator Service Continued ===");
+			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnConinue event Ended...");
+			}
+
+		protected override void OnShutdown()
+			{
+			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnShutdown event begin...");
+			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === Shutting Down DocGenerator Service ===");
+
+			// Update the service state to Shatdown Pending. 
+			//ServiceStatus objServiceStatus = new ServiceStatus();
+			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOP_PENDING;
+			//objServiceStatus.dwWaitHint = 3000000; // 300 seconds - 5 minutes
+			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
+
+			DocumentGenerateTimer.Enabled = false;
+			DocumentGenerateTimer.Stop();
+
+			DataRefreshTimer.Enabled = false;
+			DataRefreshTimer.Stop();
+			// Update the service state to Stopped. 
+			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;
+			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
+			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === DocGenerator Service Stopped/Shutdown ===");
+			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnShutdown event Ended...");
 			}
 		}
 	}

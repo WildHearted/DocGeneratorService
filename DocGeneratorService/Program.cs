@@ -37,42 +37,6 @@ namespace DocGeneratorService
 				//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " +++ Exception occurred in OnStart service +++");
 				}
 			}
-		//static void RunInteractive(ServiceBase[] parServiceBaseToRun)
-		//	{
-		//	Console.WriteLine("Services running in INTERACTIVE mode.\n");
-
-		//	MethodInfo onStartMethod = typeof(ServiceBase).GetMethod(
-		//		name: "OnStart",
-		//		bindingAttr: System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
-
-		//	foreach(ServiceBase objServiceBase in parServiceBaseToRun)
-		//		{
-		//		Console.Write("\tStarting {0}...", objServiceBase.ServiceName);
-		//		onStartMethod.Invoke(objServiceBase, new object[] { new string[] { } });
-		//		Console.WriteLine("Started");
-		//		}
-
-		//	Console.WriteLine("\n\n");
-
-		//	Console.WriteLine("Press any key to stop the service and end the process...");
-		//	Console.ReadKey();
-		//	Console.WriteLine();
-
-		//	MethodInfo onStopMethod = typeof(ServiceBase).GetMethod(
-		//		name: "OnStop",
-		//		bindingAttr: BindingFlags.Instance | BindingFlags.NonPublic);
-
-		//	foreach(ServiceBase objServiceBase in parServiceBaseToRun)
-		//		{
-		//		Console.Write("Stopping {0}...", objServiceBase.ServiceName);
-		//		onStopMethod.Invoke(objServiceBase, null);
-		//		Console.Write("Stopped");
-		//		}
-
-		//	Console.WriteLine("All Services Stopped.");
-
-		//	Thread.Sleep(1000);
-		//	}
 		}
 	}
 
