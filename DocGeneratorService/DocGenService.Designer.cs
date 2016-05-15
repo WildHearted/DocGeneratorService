@@ -28,38 +28,13 @@
 		/// </summary>
 		private void InitializeComponent()
 			{
-			this.components = new System.ComponentModel.Container();
-			this.objEventLog = new System.Diagnostics.EventLog();
-			this.DocumentGenerateTimer = new System.Windows.Forms.Timer(this.components);
-			this.DataRefreshTimer = new System.Windows.Forms.Timer(this.components);
-			((System.ComponentModel.ISupportInitialize)(this.objEventLog)).BeginInit();
-			// 
-			// objEventLog
-			// 
-			this.objEventLog.EnableRaisingEvents = true;
-			this.objEventLog.Log = "DocGenEventLog";
-			// 
-			// DocumentGenerateTimer
-			// 
-			this.DocumentGenerateTimer.Interval = 60000;
-			this.DocumentGenerateTimer.Tick += new System.EventHandler(this.DocumentGenerateTimer_Tick);
-			// 
-			// DataRefreshTimer
-			// 
-			this.DataRefreshTimer.Interval = 10000;
-			this.DataRefreshTimer.Tick += new System.EventHandler(this.DataRefreshTimer_Tick);
 			// 
 			// DocGeneratorServiceBase
 			// 
 			this.ServiceName = "DocGenService";
-			((System.ComponentModel.ISupportInitialize)(this.objEventLog)).EndInit();
 
 			}
 
 		#endregion
-
-		private System.Diagnostics.EventLog objEventLog;
-		private System.Windows.Forms.Timer DocumentGenerateTimer;
-		private System.Windows.Forms.Timer DataRefreshTimer;
 		}
 	}

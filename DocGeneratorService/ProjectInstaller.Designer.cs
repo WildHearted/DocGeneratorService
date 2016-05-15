@@ -40,9 +40,8 @@
 			// objServiceInstaller
 			// 
 			this.objServiceInstaller.Description = "DocGenerator Service";
-			this.objServiceInstaller.DisplayName = "DocGenerator Services";
+			this.objServiceInstaller.DisplayName = "DocGenerator Service";
 			this.objServiceInstaller.ServiceName = "DocGenService";
-			this.objServiceInstaller.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
 			// 
 			// ProjectInstaller
 			// 

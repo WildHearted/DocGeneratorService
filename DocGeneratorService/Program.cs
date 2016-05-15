@@ -15,9 +15,6 @@ namespace DocGeneratorService
 		/// </summary>
 		static void Main()
 			{
-			Console.WriteLine("Main module of DocGeneratorService - Begin @ " + DateTime.Now.ToString("G"));
-			AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-
 			ServiceBase[] objServicesBase;
 			objServicesBase = new ServiceBase[]
 				{
@@ -26,16 +23,6 @@ namespace DocGeneratorService
 		
 			ServiceBase.Run(objServicesBase);
 
-			Console.WriteLine("Main module of DocGeneratorService - Ended @ " + DateTime.Now.ToString("G"));
-			}
-
-		private static void CurrentDomain_UnhandledException(Object sender, UnhandledExceptionEventArgs e)
-			{
-			if(e != null && e.ExceptionObject != null)
-				{
-				Console.WriteLine(DateTime.Now.ToString("G") + " +++ Unexpected Exception occurred +++");
-				//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " +++ Exception occurred in OnStart service +++");
-				}
 			}
 		}
 	}
