@@ -28,7 +28,7 @@ namespace DocGeneratorService
 			{
 
 			//- uncomment the following line to debug the service
-			Debugger.Break();
+			//Debugger.Break();
 
 			InitializeComponent();
 
@@ -39,14 +39,6 @@ namespace DocGeneratorService
 
 		protected override void OnStart(string[] args)
 			{
-
-			//base.OnStart(args: args);
-
-			// Update the service state to Start Pending. 
-			//ServiceStatus objServiceStatus = new ServiceStatus();
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_START_PENDING;
-			//objServiceStatus.dwWaitHint = 30000; // 30 seconds
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
 
 			//- Establish the SDDPdatacontect that will be used to access data on SharePoint
 
@@ -65,18 +57,7 @@ namespace DocGeneratorService
 			docGeneratorThread.IsBackground = true;
 			docGeneratorThread.Start();
 
-			// Configure the timer for the Generation of Documents
-			//System.Timers.Timer DocumentGenerateTimer = new System.Timers.Timer();
-			//DocumentGenerateTimer.Interval = 60000; // Timer to fire every 60 seconds
-			//DocumentGenerateTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.DocumentGenerateTimer_Tick);
-			//DocumentGenerateTimer.Enabled = true;
-			//DocumentGenerateTimer.Start();
-
-			// Update the service state to Running. 
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			EventLog.WriteEntry("DocGenerator Service started successfully", EventLogEntryType.Information);
+			//EventLog.WriteEntry("DocGenerator Service started successfully", EventLogEntryType.Information);
 
 			}
 
@@ -240,6 +221,13 @@ namespace DocGeneratorService
 						}
 					}
 				}
+			}
+
+
+
+		protected override void OnStop()
+			{
+			//- signal the **shutdownEvent
 			//- Send an e-mail to the Technical support team when the service is stopped
 			eMail.SendEmail(
 				parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
@@ -247,32 +235,13 @@ namespace DocGeneratorService
 				parBody: "Hi there\nJust a notification to let you know that the DocGenerator was stopped.",
 				parSendBcc: false);
 
-			}
-
-
-
-		protected override void OnStop()
-			{
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " --- Starting DocGenerator Service ---");
-
-			// Update the service state to Stop Pending. 
-			//ServiceStatus objServiceStatus = new ServiceStatus();
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOP_PENDING;
-			//objServiceStatus.dwWaitHint = 300000; // 300 seconds - 5 minutes
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			//- signal the **shutdownEvent
 			shutdownEvent.Set();
 			if(docGeneratorThread.Join(5000))
 				{
 				docGeneratorThread.Abort();
 				}
 
-			// Update the service state to Stopped. 
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			EventLog.WriteEntry("DocGenerator Service stopped successfully", EventLogEntryType.Information);
+			//EventLog.WriteEntry("DocGenerator Service stopped successfully", EventLogEntryType.Information);
 			}
 
 		protected override void OnPause()
@@ -316,15 +285,6 @@ namespace DocGeneratorService
 
 		protected override void OnShutdown()
 			{
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnShutdown event begin...");
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === Shutting Down DocGenerator Service ===");
-
-			// Update the service state to Shatdown Pending. 
-			//ServiceStatus objServiceStatus = new ServiceStatus();
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOP_PENDING;
-			//objServiceStatus.dwWaitHint = 3000000; // 300 seconds - 5 minutes
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
 			//- signal the **shutdownEvent
 			shutdownEvent.Set();
 			if(docGeneratorThread.Join(5000))
@@ -332,12 +292,7 @@ namespace DocGeneratorService
 				docGeneratorThread.Abort();
 				}
 
-			// Update the service state to Stopped. 
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_STOPPED;
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === DocGenerator Service Stopped/Shutdown ===");
-
-			EventLog.WriteEntry("DocGenerator Service SHUTDOWN successfully", EventLogEntryType.Information);
+			//EventLog.WriteEntry("DocGenerator Service SHUTDOWN successfully", EventLogEntryType.Information);
 
 			}
 		}
