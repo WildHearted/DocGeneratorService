@@ -1,0 +1,163 @@
+﻿@using DocGeneratorCore;
+<style type="text/css">
+	.auto-style1 {
+		width: 622px;
+	}
+	.auto-style2 {
+		width: 597px;
+	}
+	.auto-style3 {
+		width: 850px;
+	}
+	.auto-style4 {
+		width: 622px;
+		height: 41px;
+	}
+	.auto-style6 {
+		left: 5px;
+		}
+	.auto-style7 {
+		width: 94%;
+		}
+	.auto-style8 {
+		width: 800px;
+	}
+	.auto-style9 {
+		width: 800px;
+		height: 54px;
+	}
+	.auto-style10 {
+		width: 201%;
+		margin-left: 28px;
+		margin-bottom: 9px;
+	}
+	.auto-style11 {
+		border-width: 0px;
+	}
+	.auto-style12 {
+		width: 622px;
+		text-align: center;
+		height: 6px;
+	}
+	.auto-style13 {
+		font-weight: normal;
+	}
+	.auto-style14 {
+		width: 70%;
+	}
+	.auto-style16 {
+		width: 622px;
+		height: 13px;
+	}
+	.auto-style17 {
+		left: 5px;
+		text-align: justify;
+		height: 11px;
+	}
+	.auto-style18 {
+		width: 100%;
+		height: 22px;
+	}
+	.auto-style19 {
+		width: 622px;
+		height: 9px;
+	}
+</style>
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=0.8" />
+	<title>
+	</title>
+</head>
+	<body style="background-color: #F0F0F0">
+		<div style="font-family: Arial, Helvetica, sans-serif; vertical-align: top; display: table; clear: both; width: 100%; background-color: #F0F0F0; text-align: center;" class="auto-style14">
+			<table class="auto-style2" style="padding: 0px; margin: 40px; line-height: 0px;">
+				<tr>
+					<td class="auto-style3" style="padding: 5px 25px 5px 25px; margin: 25px; width: 800px; background-color: #FFFFFF;">
+						<table style="background-color: #FFFFFF; margin-top: 20px; margin-bottom: 20px; height: auto;" class="auto-style8">
+							<tr>
+								<td class="auto-style1" colspan="2" style="height: 53px;">
+									<a href="https://teams.dimensiondata.com/sites/ServiceCatalogue">
+									<img alt="e-mail banner" src="https://teams.dimensiondata.com/sites/ServiceCatalogue/SiteCollectionImages/HTMLemails/EmailBanner800x54.png" class="auto-style9" style="width: 900px; height: 54px; position: relative;" /></a></td>
+							</tr>
+							<tr>
+								<td class="auto-style4" style="border-bottom: medium solid #999999; font-family: Arial; font-size: large; font-weight: normal; font-style: normal; color: #666666; word-spacing: 4px; letter-spacing: 2px; height: 10px;" colspan="2">
+									Service Design &amp; Delivery Portfolio</td>
+							</tr>
+							<tr>
+								<td class="auto-style16" style="font-family: Arial, Helvetica, sans-serif; font-size: small; font-weight: lighter; 
+									font-style: normal; color: #666666; word-spacing: 3px; letter-spacing: 2px; " colspan="2">
+									@Model.MessageHeading</td>
+							</tr>
+							<tr>
+								<td class="auto-style6" style="vertical-align: top; text-align: center;">
+									@{
+									if(@Model.Classification == enumMessageClassification.Error)
+										{
+										<img alt="" src="https://teams.dimensiondata.com/sites/ServiceCatalogue/SiteCollectionImages/HTMLemails/Error.png" width="50" />
+										}
+									else if(@Model.Classification == enumMessageClassification.Warning)
+										{
+										<img alt="" src="https://teams.dimensiondata.com/sites/ServiceCatalogue/SiteCollectionImages/HTMLemails/Warning.png" width="50" />
+										}
+									else
+										{
+									<img alt="" src="https://teams.dimensiondata.com/sites/ServiceCatalogue/SiteCollectionImages/HTMLemails/Information.png" width="50" />
+										}
+									}
+									
+								</td>
+								<td class="auto-style7" style="color: #333333; font-family: Arial; font-size: 12px; word-spacing: 3px; letter-spacing: 2px; font-weight: bold; padding-top: 1px; padding-right: 5px; padding-left: 5px;">
+									<span class="auto-style13">@Model.Instruction</span> <br />
+										<table style="width:100%;">
+											<tr>
+												<td style="padding: 5px; width: 100%; font-family: Arial, Helvetica, sans-serif; 
+													font-size: x-small; color: #666666">
+													These are the error/s that occurred:
+													<br />
+													<table>
+														<tr>
+															<td style="font-family: Arial; font-size: xx-small; color: #CC0000; font-weight: normal; 
+																text-align: justify; list-style-type: disc; list-style-position: outside; 
+																width: 100%;">
+																<ul class="auto-style10" style="font-family: Arial; font-size: xx-small; 
+																	font-weight: normal; vertical-align: top; text-align: left; text-indent: 1px; 
+																	list-style-type: disc; list-style-position: outside;">
+																	@foreach(var errorItem in @Model.MessageLines)
+																	{
+																	<li>@errorItem</li>
+																	}
+																</ul>
+															</td>
+														</tr>
+													</table>
+												</td>
+											</tr>
+										</table>
+									</td>
+							</tr>
+				
+							<tr>
+								<td class="auto-style18" style="margin: 0px 5px 0px 5px; font-family: Arial, Helvetica, sans-serif; font-size: xx-small; color: #808080; word-spacing: 3px; letter-spacing: 2px; line-height: normal; vertical-align: top;" colspan="2">
+								This is not a spam message or a repeat e-mail. You receive this notification because your e-mail address (@Model.EmailAddress) is
+									currently used as primary contact for SDDP System Technical Support. </td>
+							</tr>	
+							<tr>
+								<td class="auto-style19" style="margin: 0px 5px 0px 5px; font-family: Arial, Helvetica, sans-serif; font-size: xx-small; color: #808080; word-spacing: 3px; letter-spacing: 1px; line-height: normal; vertical-align: text-top; " colspan="2">
+								This is a Dimension Data internal communication and it may not be shared with any party not currently employed by Dimension Data.</td>
+							</tr>
+							<tr>
+								<td class="auto-style12" style="margin: 3px 5px 0px 5px; font-family: Arial; font-size: xx-small; color: #808080; word-spacing: 3px; letter-spacing: 1px; text-align: right; " colspan="2">
+									© 2016 Dimension Data All Rights Reserved</td>
+							</tr>	
+
+						</table>							
+					</td>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>
