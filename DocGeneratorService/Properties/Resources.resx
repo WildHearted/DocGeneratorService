@@ -132,22 +132,7 @@
   <data name="SharePointRESTuri" xml:space="preserve">
     <value>/_vti_bin/listdata.svc</value>
   </data>
-  <data name="SharePointSiteURL_DEV" xml:space="preserve">
-    <value>/sites/servicecatalogue</value>
-  </data>
-  <data name="SharePointSiteURL_PROD" xml:space="preserve">
-    <value>/sites/servicecatalogue</value>
-  </data>
-  <data name="SharePointSiteURL_QA" xml:space="preserve">
-    <value>/sites/uat-servicecatalogue</value>
-  </data>
-  <data name="SharePointURL_DEV" xml:space="preserve">
-    <value>https://teams.uat.dimensiondata.com</value>
-  </data>
-  <data name="SharePointURL_PROD" xml:space="preserve">
-    <value>https://teams.dimensiondata.com</value>
-  </data>
-  <data name="SharePointURL_QA" xml:space="preserve">
-    <value>https://teams.dimensiondata.com</value>
+  <data name="SharePointSiteURL" xml:space="preserve">
+    <value>https://teams.dimensiondata.com/sites/servicecatalogue</value>
   </data>
 </root>
