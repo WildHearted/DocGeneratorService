@@ -21,6 +21,7 @@ namespace DocGeneratorService
 		//- the *shutdownEvent** controls the Shutting down of th service.
 		private ManualResetEvent shutdownEvent = new ManualResetEvent(initialState: false);
 		private NetworkCredential credentialsDocGenerator = new NetworkCredential();
+		//private int SharePointEnvironment = 2; // **0** Development, **1** QA, **2** Production
 		//- The docGeneratorThread 
 		private Thread docGeneratorThread;
 		private CompleteDataSet completeDataSet = new CompleteDataSet();
@@ -38,20 +39,40 @@ namespace DocGeneratorService
 
 		protected override void OnStart(string[] args)
 			{
-			//- Establish the SDDPdatacontect that will be used to access data on SharePoint
-
-			//this.completeDataSet.SDDPdatacontext = new DocGeneratorCore.SDDPServiceReference.DesignAndDeliveryPortfolioDataContext(
-			//	new Uri(Properties.Resources.SharePointSiteURL + Properties.Resources.SharePointRESTuri));
-
-			//this.completeDataSet.SDDPdatacontext.Credentials = new NetworkCredential(
-			//- Set the Credetials that the DocGenerator application use during processing
-			credentialsDocGenerator = new NetworkCredential(				
-					userName: Properties.Resources.DocGenerator_AccountName,
-					password: Properties.Resources.DocGenerator_Account_Password,
-					domain: Properties.Resources.DocGenerator_AccountDomain);
-			//this.completeDataSet.SDDPdatacontext.MergeOption = MergeOption.NoTracking;
-
-
+			//base.OnStart(args);
+			//if(String.IsNullOrEmpty(args[0]))
+			//	{
+			//	SharePointEnvironment = 2; //- Production Environment
+			//	}
+			//else
+			//	{
+			//	switch(args[0].Substring(0, 1))
+			//		{
+			//	case "P":
+			//	case "p":
+			//			{
+			//			SharePointEnvironment = 2; //- Production Environment
+			//			break;
+			//			}
+			//	case "Q":
+			//	case "q":
+			//			{
+			//			SharePointEnvironment = 1; //- QA Environment
+			//			break;
+			//			}
+			//	case "D":
+			//	case "d":
+			//			{
+			//			SharePointEnvironment = 0; //- Development Environment
+			//			break;
+			//			}
+			//	 default:
+			//			{
+			//			SharePointEnvironment = 0; //- Development Environment
+			//			break;
+			//			}
+			//		}
+			//	}
 
 			//- Create the Thread which will execute service
 			docGeneratorThread = new Thread(ServiceControlFunction);
@@ -65,9 +86,21 @@ namespace DocGeneratorService
 
 		private void ServiceControlFunction()
 			{
+			//- Set the Credetials that the DocGenerator application will use during processing
+			credentialsDocGenerator = new NetworkCredential(
+				userName: Properties.Resources.DocGenerator_AccountName,
+				password: Properties.Resources.DocGenerator_Account_Password,
+				domain: Properties.Resources.DocGenerator_AccountDomain);
+
+			//- Prepare the technical e-mail to be send.
 			string EmailBodyText = String.Empty;
 			string strExceptionMessage = String.Empty;
 			bool bSuccessfulSentEmail = false;
+
+			completeDataSet.IsDataSetComplete = false;
+			
+			completeDataSet.SharePointSiteURL = Properties.Resources.SharePointSiteURL_PROD;
+			completeDataSet.SharePointSiteSubURL = Properties.Resources.SharePointSiteURL_PROD;
 
 			// Notify Technical Support that the DocGenerator Service  started.
 			TechnicalSupportModel emailModel = new TechnicalSupportModel();
@@ -76,7 +109,7 @@ namespace DocGeneratorService
 			emailModel.MessageHeading = "For your information...";
 			emailModel.Instruction = "This is a just to inform you that...";
 			emailModel.MessageLines = new List<string>();
-			emailModel.MessageLines.Add("The DocGenerator Service started at " + DateTime.Now.ToString());
+			emailModel.MessageLines.Add("The DocGenerator Service started at " + DateTime.UtcNow.ToString());
 			emailModel.MessageLines.Add("No need to worry...");
 			//- Declare the Email object and assign the above defined message to the relevant property
 			eMail objTechnicalEmail = new eMail();
@@ -85,6 +118,7 @@ namespace DocGeneratorService
 			if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 				{
 				bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+					parDataSet: ref completeDataSet,
 					parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 					parSubject: "DocGenerator: Service Started: " + DateTime.UtcNow.ToString(),
 					parSendBcc: false);
@@ -98,7 +132,7 @@ namespace DocGeneratorService
 				emailModel.MessageHeading = "For your information...";
 				emailModel.Instruction = "On service startup, the DocGenerator didn't detect a Network connection...";
 				emailModel.MessageLines = new List<string>();
-				emailModel.MessageLines.Add("At " + DateTime.Now.ToString() + "the DocGenerator could not detect a network connection.");
+				emailModel.MessageLines.Add("At " + DateTime.UtcNow.ToString() + "the DocGenerator could not detect a network connection.");
 				emailModel.MessageLines.Add("Please watch out for any other connectivity failures.");
 				emailModel.MessageLines.Add("If more connectivity failures occur, please investigate the connectivity status of the DocGenerator server.");
 				// Declare the Email object and assign the above defined message to the relevant property
@@ -108,6 +142,7 @@ namespace DocGeneratorService
 				if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 					{
 					bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+						parDataSet: ref completeDataSet,
 						parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 						parSubject: "DocGenerator: Connectivity Warning: " + DateTime.UtcNow.ToString(),
 						parSendBcc: false);
@@ -131,7 +166,7 @@ namespace DocGeneratorService
 					emailModel.MessageHeading = "Connectivity Error";
 					emailModel.Instruction = "The DocGenerator didn't detect a Network connection...";
 					emailModel.MessageLines = new List<string>();
-					emailModel.MessageLines.Add("At " + DateTime.Now.ToString() + "the DocGenerator could not detect a network connection.");
+					emailModel.MessageLines.Add("At " + DateTime.UtcNow.ToString() + "the DocGenerator could not detect a network connection.");
 					emailModel.MessageLines.Add("Please investigate the connectivity status of the DocGenerator server.");
 					// Declare the Email object and assign the above defined message to the relevant property
 					objTechnicalEmail = new eMail();
@@ -140,6 +175,7 @@ namespace DocGeneratorService
 					if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 						{
 						bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+							parDataSet: ref completeDataSet,
 							parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 							parSubject: "DocGenerator: Connectivity ERROR: " + DateTime.UtcNow.ToString(),
 							parSendBcc: false);
@@ -149,7 +185,7 @@ namespace DocGeneratorService
 					{//- if connectivity is ok, continue to process...
 					 //- Check if the SharePoint environment can be reached
 					HttpWebRequest objHTTPwebRequest = WebRequest.Create(
-						requestUriString: Properties.Resources.SharePointSiteURL) as HttpWebRequest;
+						requestUriString: Properties.Resources.SharePointSiteURL_PROD) as HttpWebRequest;
 					objHTTPwebRequest.Credentials = credentialsDocGenerator;
 					objHTTPwebRequest.Timeout = 15000;
 					HttpWebResponse objHTTPwebResponse;
@@ -184,9 +220,9 @@ namespace DocGeneratorService
 						emailModel.EmailAddress = Properties.Resources.EmailAddress_TechnicalSupport;
 						emailModel.Classification = enumMessageClassification.Error;
 						emailModel.MessageHeading = "DocGenerator: Unable to contact SharePoint";
-						emailModel.Instruction = "The DocGenerator couldn't reach the SharePoint at " + Properties.Resources.SharePointSiteURL;
+						emailModel.Instruction = "The DocGenerator couldn't reach the SharePoint at " + Properties.Resources.SharePointSiteURL_PROD;
 						emailModel.MessageLines = new List<string>();
-						emailModel.MessageLines.Add("At " + DateTime.Now.ToString() + "the DocGenerator could not reach the SDDP SharePoint environment.");
+						emailModel.MessageLines.Add("At " + DateTime.UtcNow.ToString() + "the DocGenerator could not reach the SDDP SharePoint environment.");
 						emailModel.MessageLines.Add("Please investigate the connectivity status of the DocGenerator server.");
 						// Declare the Email object and assign the above defined message to the relevant property
 						objTechnicalEmail = new eMail();
@@ -195,6 +231,7 @@ namespace DocGeneratorService
 						if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 							{
 							bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+								parDataSet: ref completeDataSet,
 								parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 								parSubject: "DocGenerator: Unable to contact SharePoint @ " + DateTime.UtcNow.ToString(),
 								parSendBcc: false);
@@ -202,20 +239,15 @@ namespace DocGeneratorService
 						}
 					else
 						{ //- The SharePoint Server was SUCCESSFULLY contacted
-						//- Establish a new SDDPdatacontect that will be used to access data on SharePoint
+						//- Establish a new SDDPdatacontext that will be used to access data on SharePoint
 						try
 							{
 							//- Establish the DataContext to read the data from SharePoint
 							DocGeneratorCore.SDDPServiceReference.DesignAndDeliveryPortfolioDataContext datacontectSDDP = new DocGeneratorCore.SDDPServiceReference.DesignAndDeliveryPortfolioDataContext(
-								new Uri(Properties.Resources.SharePointSiteURL + Properties.Resources.SharePointRESTuri));
+								new Uri(Properties.Resources.SharePointSiteURL_PROD + Properties.Resources.SharePointRESTuri));
 
 							datacontectSDDP.Credentials = credentialsDocGenerator;
 							datacontectSDDP.MergeOption = MergeOption.NoTracking;
-
-							//this.completeDataSet.SDDPdatacontext = new DocGeneratorCore.SDDPServiceReference.DesignAndDeliveryPortfolioDataContext(
-							//	new Uri(Properties.Resources.SharePointSiteURL + Properties.Resources.SharePointRESTuri));
-							//this.completeDataSet.SDDPdatacontext.Credentials = credentialsDocGenerator;
-							//this.completeDataSet.SDDPdatacontext.MergeOption = MergeOption.NoTracking;
 
 							//- Initialise a List of DocumentCollections - the list will contain all the DocumentCollection objects that need to be generated in this cycle.
 							listDocumentCollections = new List<DocumentCollection>();
@@ -232,7 +264,17 @@ namespace DocGeneratorService
 
 							foreach(var recDocCollectionToGenerate in dsDocCollections)
 								{
-								//- Create a DocumentCollection instance and populate the basic attributes.
+								// Create a DocumentCollection instance and populate the basic attributes.
+
+								//- Check if it is a scheduled entry and if the date and time for which it is scheduled is in the future, ignore the entry.
+								if(recDocCollectionToGenerate.GenerateActionValue.StartsWith("Schedule"))
+									{
+									if(recDocCollectionToGenerate.GenerateOnDateTime.Value.CompareTo(DateTime.UtcNow) > 0)
+										{
+										continue;
+										}
+									}
+
 								DocumentCollection objDocumentCollection = new DocumentCollection();
 								objDocumentCollection.ID = recDocCollectionToGenerate.Id;
 								if(recDocCollectionToGenerate.Title == null)
@@ -267,9 +309,9 @@ namespace DocGeneratorService
 							emailModel.EmailAddress = Properties.Resources.EmailAddress_TechnicalSupport;
 							emailModel.Classification = enumMessageClassification.Warning;
 							emailModel.MessageHeading = "Warning error occurred in DocGenerator Server module.";
-							emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL;
+							emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL_PROD;
 							emailModel.MessageLines = new List<string>();
-							emailModel.MessageLines.Add("The following DataServiceClientException occurred at " + DateTime.Now.ToString());
+							emailModel.MessageLines.Add("The following DataServiceClientException occurred at " + DateTime.UtcNow.ToString());
 							emailModel.MessageLines.Add("HResult: " + exc.HResult);
 							emailModel.MessageLines.Add("Error Message: " + exc.Message);
 							emailModel.MessageLines.Add("InnerException: " + exc.InnerException);
@@ -281,6 +323,7 @@ namespace DocGeneratorService
 							if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 								{
 								bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+									parDataSet: ref completeDataSet,
 									parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 									parSubject: "DocGenerator: Warning occurred in Service Module at: " + DateTime.UtcNow.ToString(),
 									parSendBcc: false);
@@ -292,9 +335,9 @@ namespace DocGeneratorService
 							emailModel.EmailAddress = Properties.Resources.EmailAddress_TechnicalSupport;
 							emailModel.Classification = enumMessageClassification.Warning;
 							emailModel.MessageHeading = "Warning error occurred in DocGenerator Server module.";
-							emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL;
+							emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL_PROD;
 							emailModel.MessageLines = new List<string>();
-							emailModel.MessageLines.Add("The following DataServiceQueryException occurred at " + DateTime.Now.ToString());
+							emailModel.MessageLines.Add("The following DataServiceQueryException occurred at " + DateTime.UtcNow.ToString());
 							emailModel.MessageLines.Add("HResult: " + exc.HResult);
 							emailModel.MessageLines.Add("Error Message: " + exc.Message);
 							emailModel.MessageLines.Add("InnerException: " + exc.InnerException);
@@ -306,6 +349,7 @@ namespace DocGeneratorService
 							if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 								{
 								bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+									parDataSet: ref completeDataSet,
 									parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 									parSubject: "DocGenerator: Warning occurred in Service Module at: " + DateTime.UtcNow.ToString(),
 									parSendBcc: false);
@@ -317,9 +361,9 @@ namespace DocGeneratorService
 							emailModel.EmailAddress = Properties.Resources.EmailAddress_TechnicalSupport;
 							emailModel.Classification = enumMessageClassification.Warning;
 							emailModel.MessageHeading = "Warning error occurred in DocGenerator Server module.";
-							emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL;
+							emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL_PROD;
 							emailModel.MessageLines = new List<string>();
-							emailModel.MessageLines.Add("The following DataServiceRequestException occurred at " + DateTime.Now.ToString());
+							emailModel.MessageLines.Add("The following DataServiceRequestException occurred at " + DateTime.UtcNow.ToString());
 							emailModel.MessageLines.Add("HResult: " + exc.HResult);
 							emailModel.MessageLines.Add("Error Message: " + exc.Message);
 							emailModel.MessageLines.Add("InnerException: " + exc.InnerException);
@@ -331,6 +375,7 @@ namespace DocGeneratorService
 							if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 								{
 								bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+									parDataSet: ref completeDataSet,
 									parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 									parSubject: "DocGenerator: Warning occurred in Service Module at: " + DateTime.UtcNow.ToString(),
 									parSendBcc: false);
@@ -342,9 +387,9 @@ namespace DocGeneratorService
 							emailModel.EmailAddress = Properties.Resources.EmailAddress_TechnicalSupport;
 							emailModel.Classification = enumMessageClassification.Warning;
 							emailModel.MessageHeading = "Warning error occurred in DocGenerator Server module.";
-							emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL;
+							emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL_PROD;
 							emailModel.MessageLines = new List<string>();
-							emailModel.MessageLines.Add("The following DataServiceTransportException occurred at " + DateTime.Now.ToString());
+							emailModel.MessageLines.Add("The following DataServiceTransportException occurred at " + DateTime.UtcNow.ToString());
 							emailModel.MessageLines.Add("HResult: " + exc.HResult);
 							emailModel.MessageLines.Add("Error Message: " + exc.Message);
 							emailModel.MessageLines.Add("InnerException: " + exc.InnerException);
@@ -356,6 +401,7 @@ namespace DocGeneratorService
 							if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 								{
 								bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+									parDataSet: ref completeDataSet,
 									parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 									parSubject: "DocGenerator: Warning occurred in Service Module at: " + DateTime.UtcNow.ToString(),
 									parSendBcc: false);
@@ -369,9 +415,9 @@ namespace DocGeneratorService
 								emailModel.EmailAddress = Properties.Resources.EmailAddress_TechnicalSupport;
 								emailModel.Classification = enumMessageClassification.Warning;
 								emailModel.MessageHeading = "Warning error occurred in DocGenerator Server module.";
-								emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL;
+								emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL_PROD;
 								emailModel.MessageLines = new List<string>();
-								emailModel.MessageLines.Add("The following Undefined Exception occurred at " + DateTime.Now.ToString());
+								emailModel.MessageLines.Add("The following Undefined Exception occurred at " + DateTime.UtcNow.ToString());
 								emailModel.MessageLines.Add("HResult: " + exc.HResult);
 								emailModel.MessageLines.Add("Error Message: " + exc.Message);
 								emailModel.MessageLines.Add("InnerException: " + exc.InnerException);
@@ -383,6 +429,7 @@ namespace DocGeneratorService
 								if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 									{
 									bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+										parDataSet: ref completeDataSet,
 										parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 										parSubject: "DocGenerator: Warning occurred in Service Module at: " + DateTime.UtcNow.ToString(),
 										parSendBcc: false);
@@ -393,9 +440,9 @@ namespace DocGeneratorService
 								emailModel.EmailAddress = Properties.Resources.EmailAddress_TechnicalSupport;
 								emailModel.Classification = enumMessageClassification.Warning;
 								emailModel.MessageHeading = "Warning error occurred in DocGenerator Server module.";
-								emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL;
+								emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL_PROD;
 								emailModel.MessageLines = new List<string>();
-								emailModel.MessageLines.Add("The following Undefined Exception occurred at " + DateTime.Now.ToString());
+								emailModel.MessageLines.Add("The following Undefined Exception occurred at " + DateTime.UtcNow.ToString());
 								emailModel.MessageLines.Add("HResult: " + exc.HResult);
 								emailModel.MessageLines.Add("Error Message: " + exc.Message);
 								emailModel.MessageLines.Add("InnerException: " + exc.InnerException);
@@ -407,6 +454,7 @@ namespace DocGeneratorService
 								if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 									{
 									bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+										parDataSet: ref completeDataSet,
 										parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 										parSubject: "DocGenerator: Warning occurred in Service Module at: " + DateTime.UtcNow.ToString(),
 										parSendBcc: false);
@@ -417,9 +465,9 @@ namespace DocGeneratorService
 								emailModel.EmailAddress = Properties.Resources.EmailAddress_TechnicalSupport;
 								emailModel.Classification = enumMessageClassification.Error;
 								emailModel.MessageHeading = "Unexpected error occurred in DocGenerator Server module.";
-								emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL;
+								emailModel.Instruction = "DocGenerator cannot access the SharePoint site: " + Properties.Resources.SharePointSiteURL_PROD;
 								emailModel.MessageLines = new List<string>();
-								emailModel.MessageLines.Add("The following Undefined Exception occurred at " + DateTime.Now.ToString());
+								emailModel.MessageLines.Add("The following Undefined Exception occurred at " + DateTime.UtcNow.ToString());
 								emailModel.MessageLines.Add("HResult: " + exc.HResult);
 								emailModel.MessageLines.Add("Error Message: " + exc.Message);
 								emailModel.MessageLines.Add("InnerException: " + exc.InnerException);
@@ -431,6 +479,7 @@ namespace DocGeneratorService
 								if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 									{
 									bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+										parDataSet: ref completeDataSet,
 										parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 										parSubject: "DocGenerator: Warning occurred in Service Module at: " + DateTime.UtcNow.ToString(),
 										parSendBcc: false);
@@ -443,7 +492,6 @@ namespace DocGeneratorService
 			}
 
 
-
 		protected override void OnStop()
 			{
 			//- signal the **Stop Event**
@@ -451,11 +499,11 @@ namespace DocGeneratorService
 			TechnicalSupportModel emailModel = new TechnicalSupportModel();
 			emailModel.EmailAddress = Properties.Resources.EmailAddress_TechnicalSupport;
 			emailModel.Classification = enumMessageClassification.Warning;
-			emailModel.MessageHeading = "Warning: the DocGenerator Server Service stopperd.";
+			emailModel.MessageHeading = "Warning: the DocGenerator Server Service stopped.";
 			emailModel.Instruction = "This is a Warning message to inform you that...";
 			emailModel.MessageLines = new List<string>();
 			emailModel.MessageLines.Add("The DocGenerator Service was stopped at " + DateTime.UtcNow.ToString());
-			emailModel.MessageLines.Add("Please watch your e-mail and investigate of the Service does'n restart in 5 to 10 minutes.");
+			emailModel.MessageLines.Add("Please watch your e-mail and investigate if the Service does'n restart in 5 to 10 minutes.");
 			// Declare the Email object and assign the above defined message to the relevant property
 			eMail objTechnicalEmail = new eMail();
 			objTechnicalEmail.TechnicalEmailModel = emailModel;
@@ -463,6 +511,7 @@ namespace DocGeneratorService
 			if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 				{
 				bool bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+					parDataSet: ref completeDataSet,
 					parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 					parSubject: "DocGenerator: Warning occurred in Service Module at: " + DateTime.UtcNow.ToString(),
 					parSendBcc: false);
@@ -477,44 +526,6 @@ namespace DocGeneratorService
 			//EventLog.WriteEntry("DocGenerator Service stopped successfully", EventLogEntryType.Information);
 			}
 
-		protected override void OnPause()
-			{
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnPause event begin...");
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === Pausing DocGenerator Service ===");
-
-			// Update the service state to Pause Pending. 
-			//ServiceStatus objServiceStatus = new ServiceStatus();
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_PAUSE_PENDING;
-			//objServiceStatus.dwWaitHint = 300000; // 300 seconds - 5 minutes
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-
-			// Update the service state to Stopped. 
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_PAUSED;
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === DocGenerator Service Paused ===");
-			Console.WriteLine("\t + " + DateTime.Now.ToString("G") + " OnPause event Ended...");
-			}
-
-		protected override void OnContinue()
-			{
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === Continuing DocGenerator Service ===");
-
-			// Update the service state to Start Pending. 
-			//ServiceStatus objServiceStatus = new ServiceStatus();
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_CONTINUE_PENDING;
-			//objServiceStatus.dwWaitHint = 30000; // 30 seconds
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-
-			// Update the service state to Running. 
-			//objServiceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
-			//SetServiceStatus(this.ServiceHandle, ref objServiceStatus);
-
-			//objEventLog.WriteEntry(DateTime.Now.ToString("G") + " === DocGenerator Service Continued ===");
-
-			}
 
 		protected override void OnShutdown()
 			{
@@ -523,11 +534,11 @@ namespace DocGeneratorService
 			TechnicalSupportModel emailModel = new TechnicalSupportModel();
 			emailModel.EmailAddress = Properties.Resources.EmailAddress_TechnicalSupport;
 			emailModel.Classification = enumMessageClassification.Warning;
-			emailModel.MessageHeading = "Warning: the DocGenerator Server Service stopperd.";
+			emailModel.MessageHeading = "Warning: the DocGenerator Server Service stopped.";
 			emailModel.Instruction = "This is a Warning message to inform you that...";
 			emailModel.MessageLines = new List<string>();
 			emailModel.MessageLines.Add("The DocGenerator Service was stopped at " + DateTime.UtcNow.ToString());
-			emailModel.MessageLines.Add("Please watch your e-mail and investigate of the Service does'n restart in 5 to 10 minutes.");
+			emailModel.MessageLines.Add("Please watch your e-mail and investigate if the Service does'n restart in 5 to 10 minutes.");
 			// Declare the Email object and assign the above defined message to the relevant property
 			eMail objTechnicalEmail = new eMail();
 			objTechnicalEmail.TechnicalEmailModel = emailModel;
@@ -535,6 +546,7 @@ namespace DocGeneratorService
 			if(objTechnicalEmail.ComposeHTMLemail(enumEmailType.TechnicalSupport))
 				{
 				bool bSuccessfulSentEmail = objTechnicalEmail.SendEmail(
+					parDataSet: ref completeDataSet,
 					parRecipient: Properties.Resources.EmailAddress_TechnicalSupport,
 					parSubject: "DocGenerator: Warning occurred in Service Module at: " + DateTime.UtcNow.ToString(),
 					parSendBcc: false);
