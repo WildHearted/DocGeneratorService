@@ -133,6 +133,9 @@
     <value>/_vti_bin/listdata.svc</value>
   </data>
   <data name="SharePointSiteURL" xml:space="preserve">
-    <value>https://teams.dimensiondata.com/sites/servicecatalogue</value>
+    <value>/sites/servicecatalogue</value>
+  </data>
+  <data name="SharePointURL" xml:space="preserve">
+    <value>https://teams.dimensiondata.com</value>
   </data>
 </root>

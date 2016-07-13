@@ -39,8 +39,8 @@
 			// 
 			// objServiceInstaller
 			// 
-			this.objServiceInstaller.Description = "DocGenerator Service";
-			this.objServiceInstaller.DisplayName = "DocGenerator Service";
+			this.objServiceInstaller.Description = "DocGenerator Service PROD";
+			this.objServiceInstaller.DisplayName = "DocGenerator Service (Production)";
 			this.objServiceInstaller.ServiceName = "DocGenService";
 			// 
 			// ProjectInstaller

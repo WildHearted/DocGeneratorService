@@ -106,11 +106,20 @@ namespace DocGeneratorService.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://teams.dimensiondata.com/sites/servicecatalogue.
+        ///   Looks up a localized string similar to /sites/servicecatalogue.
         /// </summary>
         internal static string SharePointSiteURL {
             get {
                 return ResourceManager.GetString("SharePointSiteURL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://teams.dimensiondata.com.
+        /// </summary>
+        internal static string SharePointURL {
+            get {
+                return ResourceManager.GetString("SharePointURL", resourceCulture);
             }
         }
     }
